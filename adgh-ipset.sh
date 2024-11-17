@@ -24,7 +24,7 @@ get_interfaces() {
 
     # Запрашиваем у пользователя имя интерфейса с проверкой ввода
     while true; do
-        read -p "Введите ИМЯ интерфейса: " net_interface
+        read -p "Введите ИМЯ интерфейса, через которое нужно перенаправлять трафик: " net_interface
 
         # Проверяем, существует ли введенное имя в списке интерфейсов
         if echo "$interface_list" | grep -qw "$net_interface"; then
