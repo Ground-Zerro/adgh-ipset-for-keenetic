@@ -50,10 +50,6 @@ echo "Установка необходимых пакетов..."
 opkg update
 opkg install adguardhome-go ipset iptables ip-full
 
-# Добавляем ipset в AdGuard Home
-echo "Настройка AdGuard Home..."
-sed -i 's|ipset_file: .*|ipset_file: /opt/etc/AdGuardHome/ipset.conf|' /opt/etc/AdGuardHome/AdGuardHome.yaml
-
 # Инициализация WGET
 WGET='/opt/bin/wget -q --no-check-certificate'
 
@@ -146,6 +142,13 @@ bookstagram.com,carstagram.com,cdninstagram.com,chickstagram.com,ig.me,igcdn.com
 1337x.to,game4you.top,eztv.re,fitgirl-repacks.site,megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,rutracker.cc,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/bypass,bypass6
 github.com/bypass,bypass6
 EOF
+
+# Добавляем ipset в AdGuard Home
+echo "Настройка AdGuard Home..."
+sed -i 's|ipset_file: .*|ipset_file: /opt/etc/AdGuardHome/ipset.conf|' /opt/etc/AdGuardHome/AdGuardHome.yaml
+# Добавляем пользовательский фильтр для обхода блокировки ECH Cloudflare
+echo "Добавление правил для обхода блокировки ECH Cloudflare..."
+sed -i '/user_rules:/a \  - '\''||*^$dnstype=HTTPS,dnsrewrite=NOERROR'\''' /opt/etc/AdGuardHome/ipset.conf
 
 # Установка прав на выполнение скриптов
 echo "Установка прав на выполнение скриптов..."
