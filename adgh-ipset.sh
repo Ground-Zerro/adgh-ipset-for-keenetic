@@ -132,8 +132,27 @@ if [ -z "\$(ip6tables-save | grep bypass6)" ]; then
 fi
 EOF
 
+echo "Настройка AdGuard Home..."
+# Добавляем ipset в AdGuard Home
+echo "- включение ipset в ADGH"
+sed -i '/^  ipset_file:/c\  ipset_file: /opt/etc/AdGuardHome/ipset.conf' /opt/etc/AdGuardHome/AdGuardHome.yaml
+
+# Добавляем tls DNS серверы
+echo "- включение DNS серверов, защищенных шифрованием"
+sed -i '/^  upstream_dns:/,/^  upstream_dns_file: ""/{
+    /^  upstream_dns:/!{
+        /^  upstream_dns_file: ""/!d
+    }
+    /^  upstream_dns:/a \
+    - tls://dns.google\n    - tls://one.one.one.one\n    - tls://p0.freedns.controld.com\n    - tls://dot.sb\n    - tls://dns.nextdns.io\n    - tls://dns.quad9.net
+}' "/opt/etc/AdGuardHome/AdGuardHome.yaml"
+
+# Добавляем пользовательский фильтр для обхода блокировки ECH Cloudflare
+echo "- добавление обхода блокировки ECH Cloudflare"
+grep -q "dnstype=HTTPS,dnsrewrite=NOERROR" /root/AdGuardHome.yaml || sed -i "/user_rules:/a\  - '||*^\\\$dnstype=HTTPS,dnsrewrite=NOERROR'" /opt/etc/AdGuardHome/AdGuardHome.yaml
+
 # Создание базового списка доменов для перенаправления
-echo "Создание базового списка доменов для перенаправления..."
+echo "- базовый список доменов для перенаправления"
 cat << EOF > /opt/etc/AdGuardHome/ipset.conf
 2ip.ru/bypass,bypass6
 googlevideo.com,ggpht.com,ytimg.com,youtube.com,youtubei.googleapis.com,youtu.be,nhacmp3youtube.com,googleusercontent.com,gstatic.com/bypass,bypass6
@@ -142,13 +161,6 @@ bookstagram.com,carstagram.com,cdninstagram.com,chickstagram.com,ig.me,igcdn.com
 1337x.to,game4you.top,eztv.re,fitgirl-repacks.site,megashara.net,nnmclub.to,nnm-club.to,nnm-club.me,rarbg.to,rustorka.com,rutor.info,rutor.org,rutracker.cc,rutracker.org,rutracker.cc,tapochek.net,thelastgame.ru,thepiratebay.org,thepirate-bay.org,torrentgalaxy.to,torrent-games.best,torrentz2eu.org,limetorrents.info,pirateproxy-bay.com,torlock.com,torrentdownloads.me/bypass,bypass6
 github.com/bypass,bypass6
 EOF
-
-# Добавляем ipset в AdGuard Home
-echo "Настройка AdGuard Home..."
-sed -i 's|ipset_file: .*|ipset_file: /opt/etc/AdGuardHome/ipset.conf|' /opt/etc/AdGuardHome/AdGuardHome.yaml
-# Добавляем пользовательский фильтр для обхода блокировки ECH Cloudflare
-echo "Добавление правил для обхода блокировки ECH Cloudflare..."
-sed -i '/user_rules:/a \  - '\''||*^$dnstype=HTTPS,dnsrewrite=NOERROR'\''' /opt/etc/AdGuardHome/ipset.conf
 
 # Установка прав на выполнение скриптов
 echo "Установка прав на выполнение скриптов..."
